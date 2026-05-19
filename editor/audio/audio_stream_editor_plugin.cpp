@@ -86,6 +86,17 @@ void AudioStreamEditor::_draw_preview() {
 	Ref<AudioStreamPreview> preview = AudioStreamPreviewGenerator::get_singleton()->generate_preview(stream);
 	float preview_len = preview->get_length();
 
+	if (stream->get_length() <= 0.0f) {
+		const Color col = get_theme_color(SNAME("font_disabled_color"), EditorStringName(Editor));
+		Ref<Font> font = get_theme_font(SNAME("status_source"), EditorStringName(EditorFonts));
+		int font_size = get_theme_font_size(SNAME("status_source_size"), EditorStringName(EditorFonts));
+		_preview->draw_string(font,
+				Point2(8 * EDSCALE, size.height * 0.5f + font_size * 0.25f),
+				TTR("Waveform preview not available"),
+				HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, col);
+		return;
+	}
+
 	Vector<Vector2> points;
 	points.resize(width * 2);
 
@@ -269,7 +280,10 @@ AudioStreamEditor::AudioStreamEditor() {
 // EditorInspectorPluginAudioStream
 
 bool EditorInspectorPluginAudioStream::can_handle(Object *p_object) {
-	return Object::cast_to<AudioStreamWAV>(p_object) != nullptr;
+	if (Object::cast_to<AudioStream>(p_object) == nullptr) {
+		return false;
+	}
+	return p_object->is_class("AudioStreamWAV") || p_object->is_class("AudioStreamMP3") || p_object->is_class("AudioStreamOggVorbis") || p_object->is_class("AudioStreamSynchronized");
 }
 
 void EditorInspectorPluginAudioStream::parse_begin(Object *p_object) {
